@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comfy Couches</title>
+  <style>
+        html, body {
+            margin:0px; 
+            height:100%; 
+        }
+
+	h2 {
+	    font-family: Tahoma;
+            text: white;
+	}
+        #song-display {
+    	    width: 30vw; /* Adjust the width of the sidebar as needed */
+    	    position: fixed;
+    	    top: 0;
+    	    right: 0;
+    	    height: 100%;
+    	    background-color: #000000; /* Your desired background color */
+    	    /* Add any other styles for the sidebar */
+	}
+
+        #player-bar {
+            align-items: center; /* Center vertically */
+            position: fixed;
+    	    bottom: 0;
+    	    background-color: #FFFFFF;
+    	    width: 100%;
+    	    height: 8vh;
+    	    display: flex; /* Add this line to enable flexbox */
+    	    justify-content: center;
+    	    z-index: 100; /* Corrected property name */
+        }
+
+        #album-content {
+            width: 100vw;
+            background-color:#E8F8F5
+            height: 100%
+        }
+
+        .song-tag {
+            width: 100%;
+            height: 1em;
+    	    max-width: 100vw;
+            margin-right: 10px;
+            background-color: #1A5276;
+            padding: 1em;
+            border-radius: 30px;
+            align-items: center;
+	}
+
+  	#content {
+            width: 70vw;
+            background-color: #73C6B6;
+            height: 100%;
+	}
+  </style>
+
+
+</head>
+<body>
+	<p id="current-url" style="visibility: visible;">http://localhost:8080/Music/Music</p>
+	<div id="player-bar">
+        	<audio controls id="audio" src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/02%20For%20Free%3F%20-%20Interlude.mp3" type="audio/mpeg"> </audio>
+        </div>
+
+        <div id="song-display">
+        	<button style="text: 'white'; top: 0px; right: 0px;" onclick="hide_music_display()"> 
+			X
+		 </button>
+        </div>
+
+        <div id="content">
+                <button onclick="get_artists()"> Artists </button>
+		<div id="item-container">
+		</div>
+		
+	</div>
+
+        <script>
+
+            function hide_music_display() {
+                document.getElementById("song-display").style.visibility = "hidden";
+                document.getElementById("content").style.width = "100vw";
+            }
+ 
+            function get_artists() {
+                pywebview.api.get_artists().then(showResponse)
+            }
+
+            function populate_artist_work(url) {
+                 
+                pywebview.api.populate_artist_work(url).then(showResponse)
+	    }
+
+            function populate_songs_from_album(url) {
+                pywebview.api.populate_songs_from_album(url).then(showReponse)
+            }
+
+            function play_song(url) {
+                var audioElement = document.getElementById("audio");
+                audioElement.src = url;
+                audioElement.play();
+            }
+                 
+	</script>
+</body>
+</html>
