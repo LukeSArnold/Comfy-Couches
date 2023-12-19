@@ -9,14 +9,18 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import unquote, urlparse, urlunparse, urljoin
 import html
+import queue
 
 class Api:
     def __init__(self):
         self.cancel_heavy_stuff_flag = False
-
+        self.current_working_url = ""
+        self.navigation_queue = queue.LifoQueue()
     def get_artists(self):
         reqs = requests.get('http://localhost:8080/Music/Music')
         soup = BeautifulSoup(reqs.text, 'html.parser')
+
+        self.navigation_queue.put(("get_artists", ""))
 
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
 
@@ -56,6 +60,11 @@ class Api:
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
         soup = BeautifulSoup(reqs.text, 'html.parser')
 
+        self.current_working_url = f"http://localhost:8080/Music/Music/{url}"
+
+        self.navigation_queue.put(("populate_artist_work", url))
+
+
         albums = []
         for link in soup.find_all('a'):
             href = link.get('href')
@@ -63,6 +72,9 @@ class Api:
 
         #clear div content
         
+        window.evaluate_js("document.getElementById('container-info').style.visibility = 'hidden'")
+        window.evaluate_js(f"document.getElementById('item-container').style.marginLeft = '2vw'")
+
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
 
         for embed_url in albums:
@@ -95,6 +107,10 @@ class Api:
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
         soup = BeautifulSoup(reqs.text, 'html.parser')
 
+        self.current_working_url = f"http://localhost:8080/Music/Music/{url}"
+
+        self.navigation_queue.put(("populate_songs_from_album", url))
+
         cover_url = f"http://localhost:8080/Music/Music/{url}/cover.jpg"
 
         album_url = url.split("/")[-2]
@@ -119,7 +135,9 @@ class Api:
 
         window.evaluate_js(f"document.getElementById('item-container').style.marginLeft = '33vw'")
 
+        song_num = 0
         for embed_url in songs:
+            song_num += 1
 
             song_name = unquote(embed_url)
 
@@ -130,6 +148,8 @@ class Api:
                     navigation_url = f"http://localhost:8080/Music/Music/{url}{embed_url}"
            
                     song_name = song_name[:-4]
+                    song_name = " ".join(song_name.split(" ")[1:])
+
                     #song_name.split(" ")
                     #song_name = " ".join(song_name[1:])
  
@@ -157,6 +177,8 @@ class Api:
          
         mp3_url = url.split("/")[-1]
         song_name = (unquote(mp3_url))[:-4]
+        song_name = " ".join(song_name.split(" ")[1:])
+        
 
         album_url = url.split("/")[-2]
         album_name = unquote(album_url)
@@ -174,8 +196,28 @@ class Api:
         window.evaluate_js(f"document.getElementById('song-display-artist-name').innerHTML = '{artist_name}'")
 
         window.evaluate_js(f"document.getElementById('player-bar-cover').src = '{total_url}'")
-        window.evaluate_js(f"document.getElementById('player-bar'title').innerHTML = '{song_name}'")
+        window.evaluate_js(f"document.getElementById('player-bar-title').innerHTML = '{song_name}'")
+        window.evaluate_js(f"document.getElementById('player-bar-artist').innerHTML = '{artist_name}'")
 
+        
+
+    def navigate_back(self):
+        last_action = self.navigation_queue.get()
+        last_action = self.navigation_queue.get()
+
+        
+        last_action_method = last_action[0]
+        url = last_action[1]        
+
+        if last_action_method == "populate_songs_from_album":
+            self.populate_songs_from_album(url)
+
+        elif last_action_method == "populate_artist_work":
+            self.populate_artist_work(url)
+
+        elif last_action_method == "get_artists":
+            self.get_artists()
+        
  
 
 def start_server():
