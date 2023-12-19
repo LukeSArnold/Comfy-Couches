@@ -32,25 +32,26 @@ class Api:
         for url in urls:
         
             artist_name = unquote(url)
+           
+            if artist_name[0] != ".":
+                javascript_code = """
+                    new_tag = document.createElement('div');
+                    new_tag.setAttribute('class', 'song-tag');
 
-            javascript_code = """
-                new_tag = document.createElement('div');
-                new_tag.setAttribute('class', 'song-tag');
+                    new_tag.addEventListener('click', function(){
+                         populate_artist_work('%s');
+                    });
 
-                new_tag.addEventListener('click', function(){
-                    populate_artist_work('%s');
-                });
+                    artist_name_element = document.createElement('h4');
+                    artist_name_element.innerText = '%s';
 
-                artist_name_element = document.createElement('h4');
-                artist_name_element.innerText = '%s';
+                    new_tag.appendChild(artist_name_element);
 
-                new_tag.appendChild(artist_name_element);
+                    document.getElementById('item-container').appendChild(new_tag);
 
-                document.getElementById('item-container').appendChild(new_tag);
+                """ % (url, artist_name[:-1])
 
-            """ % (url, artist_name)
-
-            window.evaluate_js(javascript_code) 
+                window.evaluate_js(javascript_code) 
         
 
     def populate_artist_work(self, url):
@@ -70,72 +71,89 @@ class Api:
 
             album_name = unquote(embed_url)
 
-            navigation_url = f"{url}{embed_url}"
+            if album_name[0] != ".":
+
+                navigation_url = f"{url}{embed_url}"
            
-            javascript_code = """
-                new_tag = document.createElement('div');
-                new_tag.setAttribute('class', 'song-tag');
+                javascript_code = """
+                    new_tag = document.createElement('div');
+                    new_tag.setAttribute('class', 'song-tag');
 
-                new_tag.addEventListener('click', function(){
-                    populate_songs_from_album('%s');
-                });
+                    new_tag.addEventListener('click', function(){
+                         populate_songs_from_album('%s');
+                    });
 
-                album_name_element = document.createElement('h4');
-                album_name_element.innerText = '%s';
+                    album_name_element = document.createElement('h4');
+                    album_name_element.innerText = '%s';
 
-                document.getElementById('item-container').appendChild(new_tag);
+                    document.getElementById('item-container').appendChild(new_tag);
 
-                new_tag.appendChild(album_name_element);
-           """ % (navigation_url, album_name)
+                    new_tag.appendChild(album_name_element);
+                """ % (navigation_url, album_name[:-1])
 
-            window.evaluate_js(javascript_code)
+                window.evaluate_js(javascript_code)
 
     def populate_songs_from_album(self, url):
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
         soup = BeautifulSoup(reqs.text, 'html.parser')
 
-        albums = []
+        songs = []
         for link in soup.find_all('a'):
             href = link.get('href')
-            albums.append(href)
+            songs.append(href)
 
         #clear div content
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
 
-        for embed_url in albums:
+        for embed_url in songs:
 
-            album_name = unquote(embed_url)
+            song_name = unquote(embed_url)
 
-            navigation_url = f"http://localhost:8080/Music/Music/{url}{embed_url}"
-            
-            javascript_code = """
-                new_tag = document.createElement('div');
-                new_tag.setAttribute('class', 'song-tag');
+            if song_name[0] != ".":
+      
+                if song_name[-4:] == ".mp3":
 
-                new_tag.addEventListener('click', function(){
-                    play_song('%s');
-                });
+                    navigation_url = f"http://localhost:8080/Music/Music/{url}{embed_url}"
+           
+                    song_name = song_name[:-4]
+                    #song_name.split(" ")
+                    #song_name = " ".join(song_name[1:])
+ 
+                    javascript_code = """
+                        new_tag = document.createElement('div');
+                        new_tag.setAttribute('class', 'song-tag');
 
-                album_name_element = document.createElement('h4');
-                album_name_element.innerText = '%s';
+                        new_tag.addEventListener('click', function(){
+                            play_song('%s');
+                        });
 
-                document.getElementById('item-container').appendChild(new_tag);
+                        album_name_element = document.createElement('h4');
+                        album_name_element.innerText = '%s';
 
-                new_tag.appendChild(album_name_element);
-           """ % (navigation_url, album_name)
+                        document.getElementById('item-container').appendChild(new_tag);
 
-            window.evaluate_js(javascript_code)
+                        new_tag.appendChild(album_name_element);
+                    """ % (navigation_url, song_name)
+
+                    window.evaluate_js(javascript_code)
 
     def populate_player_view(self, url):
 
         new_url = "/".join(url.split("/")[:-1])
+         
+        mp3_url = url.split("/")[-1]
+        song_name = (unquote(mp3_url))[:-4]
+
+        artist_url = url.split("/")[-2]
+        artist_name = unquote(artist_url)
+        
 
         total_url = new_url+"/cover.jpg"
 
-        javascript_code = f"document.getElementById('song-display-cover').src = {total_url}"
- 
-        print(javascript_code)
-        window.evaluate_js(javascript_code)
+        window.evaluate_js(f"document.getElementById('song-display-cover').src = '{total_url}'")
+
+        window.evaluate_js(f"document.getElementById('song-display-song-name').innerHTML = '{song_name}'")
+        window.evaluate_js(f"document.getElementById('song-display-artist-name').innerHTML = '{artist_name}'")
 
  
 
