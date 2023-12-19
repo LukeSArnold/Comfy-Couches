@@ -1,4 +1,3 @@
-import random
 import sys
 import threading
 import time
@@ -8,7 +7,7 @@ import http.server
 import socketserver
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse, urlunparse, urljoin
 import html
 
 class Api:
@@ -22,6 +21,8 @@ class Api:
         reqs = requests.get('http://localhost:8080/Music/Music')
         soup = BeautifulSoup(reqs.text, 'html.parser')
 
+        window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
+
         urls = []
         for link in soup.find_all('a'):
             href = link.get('href')
@@ -30,7 +31,7 @@ class Api:
 
         for url in urls:
         
-            artist_name = url.replace("%20", " ")
+            artist_name = unquote(url)
 
             javascript_code = """
                 new_tag = document.createElement('div');
@@ -40,12 +41,13 @@ class Api:
                     populate_artist_work('%s');
                 });
 
-                artist_name_element = document.createElement('h2');
+                artist_name_element = document.createElement('h4');
                 artist_name_element.innerText = '%s';
+
+                new_tag.appendChild(artist_name_element);
 
                 document.getElementById('item-container').appendChild(new_tag);
 
-                new_tag.appendChild(artist_name_element);
             """ % (url, artist_name)
 
             window.evaluate_js(javascript_code) 
@@ -66,7 +68,7 @@ class Api:
 
         for embed_url in albums:
 
-            album_name = embed_url.replace("%20", " ")
+            album_name = unquote(embed_url)
 
             navigation_url = f"{url}{embed_url}"
            
@@ -78,7 +80,7 @@ class Api:
                     populate_songs_from_album('%s');
                 });
 
-                album_name_element = document.createElement('h2');
+                album_name_element = document.createElement('h4');
                 album_name_element.innerText = '%s';
 
                 document.getElementById('item-container').appendChild(new_tag);
@@ -102,10 +104,7 @@ class Api:
 
         for embed_url in albums:
 
-            album_name = BeautifulSoup(embed_url, "html.parser")
-
-            #album_name = html.unescape(embed_url).replace("%20"," ")
-            #album_name = embed_url.replace("%20", " ")
+            album_name = unquote(embed_url)
 
             navigation_url = f"http://localhost:8080/Music/Music/{url}{embed_url}"
             
@@ -117,7 +116,7 @@ class Api:
                     play_song('%s');
                 });
 
-                album_name_element = document.createElement('h2');
+                album_name_element = document.createElement('h4');
                 album_name_element.innerText = '%s';
 
                 document.getElementById('item-container').appendChild(new_tag);
@@ -127,7 +126,18 @@ class Api:
 
             window.evaluate_js(javascript_code)
 
+    def populate_player_view(self, url):
 
+        new_url = "/".join(url.split("/")[:-1])
+
+        total_url = new_url+"/cover.jpg"
+
+        javascript_code = f"document.getElementById('song-display-cover').src = {total_url}"
+ 
+        print(javascript_code)
+        window.evaluate_js(javascript_code)
+
+ 
 
 def start_server():
     port = 8080

@@ -51,6 +51,13 @@ class Port:
 
             if not os.path.isfile(f"{music_dir}/{artist}/{album}/{new_song_name}"):
                 os.replace(file, f"{music_dir}/{artist}/{album}/{new_song_name}") 
+
+            if not os.path.isfile(f"{music_dir}/{artist}/{album}/cover.jpg"):
+                for image in audio.tag.images:
+                    image_file = open(f"{music_dir}/{artist}/{album}/cover.jpg", "wb")
+                    image_file.write(image.image_data)
+                    image_file.close()
+                
         
 if __name__ == "__main__":
     porter = Port()
