@@ -14,9 +14,6 @@ class Api:
     def __init__(self):
         self.cancel_heavy_stuff_flag = False
 
-    def convert(self):
-        print("boy howdy")
-
     def get_artists(self):
         reqs = requests.get('http://localhost:8080/Music/Music')
         soup = BeautifulSoup(reqs.text, 'html.parser')
@@ -65,6 +62,7 @@ class Api:
             albums.append(href)
 
         #clear div content
+        
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
 
         for embed_url in albums:
@@ -97,6 +95,14 @@ class Api:
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
         soup = BeautifulSoup(reqs.text, 'html.parser')
 
+        cover_url = f"http://localhost:8080/Music/Music/{url}/cover.jpg"
+
+        album_url = url.split("/")[-2]
+        album_name = unquote(album_url)
+
+        artist_url = url.split("/")[-3]
+        artist_name = unquote(artist_url)
+
         songs = []
         for link in soup.find_all('a'):
             href = link.get('href')
@@ -104,6 +110,14 @@ class Api:
 
         #clear div content
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
+
+        window.evaluate_js(f"document.getElementById('container-info').style.visibility = 'visible'")
+        window.evaluate_js(f"document.getElementById('container-info-cover').src = '{cover_url}'")
+
+        window.evaluate_js(f"document.getElementById('container-info-text1').innerHTML = '{album_name}'")
+        window.evaluate_js(f"document.getElementById('container-info-text2').innerHTML = '{artist_name}'")
+
+        window.evaluate_js(f"document.getElementById('item-container').style.marginLeft = '33vw'")
 
         for embed_url in songs:
 
@@ -144,16 +158,23 @@ class Api:
         mp3_url = url.split("/")[-1]
         song_name = (unquote(mp3_url))[:-4]
 
-        artist_url = url.split("/")[-2]
-        artist_name = unquote(artist_url)
+        album_url = url.split("/")[-2]
+        album_name = unquote(album_url)
         
+        artist_url = url.split("/")[-3]
+        artist_name = unquote(artist_url)
 
         total_url = new_url+"/cover.jpg"
-
+       
+        window.evaluate_js(f"document.getElementById('container-info').style.visibility = hidden")
+ 
         window.evaluate_js(f"document.getElementById('song-display-cover').src = '{total_url}'")
 
         window.evaluate_js(f"document.getElementById('song-display-song-name').innerHTML = '{song_name}'")
         window.evaluate_js(f"document.getElementById('song-display-artist-name').innerHTML = '{artist_name}'")
+
+        window.evaluate_js(f"document.getElementById('player-bar-cover').src = '{total_url}'")
+        window.evaluate_js(f"document.getElementById('player-bar'title').innerHTML = '{song_name}'")
 
  
 
