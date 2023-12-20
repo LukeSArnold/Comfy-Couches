@@ -15,7 +15,12 @@ class Api:
     def __init__(self):
         self.cancel_heavy_stuff_flag = False
         self.current_working_url = ""
+
         self.navigation_queue = queue.LifoQueue()
+        self.song_queue = queue.Queue()
+
+        self.is_playing = False
+
     def get_artists(self):
         reqs = requests.get('http://localhost:8080/Music/Music')
         soup = BeautifulSoup(reqs.text, 'html.parser')
@@ -156,22 +161,47 @@ class Api:
                     javascript_code = """
                         new_tag = document.createElement('div');
                         new_tag.setAttribute('class', 'song-tag');
+                        new_tag.style.justifyContent = 'space-between';
 
-                        new_tag.addEventListener('click', function(){
+
+                        tag_left_component = document.createElement('div');
+                        tag_left_component.setAttribute('class','song-tag-left');
+                        tag_left_component.style.width = '80vw';
+
+
+                        tag_right_component = document.createElement('div');
+                        tag_right_component.setAttribute('class','song-tag-right');
+                        
+
+                        tag_left_component.addEventListener('click', function(){
                             play_song('%s');
                         });
 
-                        album_name_element = document.createElement('h4');
-                        album_name_element.innerText = '%s';
+                        tag_right_component.addEventListener('click', function(){
+                            add_to_queue('%s');
+                        });
+
+                        song_name_element = document.createElement('h4');
+                        song_name_element.innerText = '%s';
+
+                        add_to_queue_text = document.createElement('h4');
+                        add_to_queue_text.innerText = '+';
 
                         document.getElementById('item-container').appendChild(new_tag);
 
-                        new_tag.appendChild(album_name_element);
-                    """ % (navigation_url, song_name)
+                        new_tag.appendChild(tag_left_component);
+                        new_tag.appendChild(tag_right_component);
+
+                        tag_left_component.appendChild(song_name_element);
+                        tag_right_component.appendChild(add_to_queue_text);
+
+                    """ % (navigation_url, navigation_url,  song_name)
 
                     window.evaluate_js(javascript_code)
 
     def populate_player_view(self, url):
+
+        self.is_playing = True
 
         new_url = "/".join(url.split("/")[:-1])
          
@@ -219,6 +249,35 @@ class Api:
             self.get_artists()
         
  
+    def toggle_music(self):
+
+        if self.is_playing:
+            window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+            window.evaluate_js("document.getElementById('audio').pause();")
+            self.is_playing = False
+            print("pausing :)")
+
+        else:
+            window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PauseButton.png';")
+            window.evaluate_js("document.getElementById('audio').play();")
+            self.is_playing = True
+            print("playing :)")
+
+    def play_song(self, url):
+        window.evaluate_js(f"document.getElementById('audio').src = '{url}'")
+        window.evaluate_js(f"document.getElementById('audio').play()")
+
+    def add_to_queue(self, url):
+        print(f"added {url} to the queue")
+        self.song_queue.put(url)
+
+    def play_next_in_queue(self):
+
+        print("song finished")
+        next_song_url = self.song_queue.get()
+
+        self.play_song(next_song_url)
+        self.populate_player_view(next_song_url)
 
 def start_server():
     port = 8080
