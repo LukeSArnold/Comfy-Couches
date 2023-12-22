@@ -6,267 +6,261 @@
   <title>Comfy Couches</title>
   <style>
         html{
-	    overflow: hidden;
-            margin:0px; 
+	    	overflow: hidden;
+            margin:0;
             height:100%; 
         }
 
-        body {
-	    overflow: auto;
-	    margin: 0;
-	    height: 100%;
-	    background-color: #6A7C8F;
+		body {
+			overflow: auto;
+			margin: 0;
+			height: 100%;
+			background-color: #6A7C8F;
 
-	}
+		}
 
-	h2 {
-	    font-family: Tahoma;
-            color: white;
-	}
+		h2 {
+			font-family: Tahoma, serif;
+			color: white;
+		}
 
-        h3 {
-	    font-family: Thoma;
-            color: white;
-        }
+		h3 {
+			font-family: Tahoma, serif;
+			color: white;
+			}
 
-        h4 {
-	    font-family: Tahoma;
-	    color: white;
-	    margin: 0;
-    	    padding: 0;
-	}
- 
-        h5 {
-	    color:white;
-	    margin: 0;
-    	    padding: 0;
-	}
+		h4 {
+			font-family: Tahoma, serif;
+			color: white;
+			margin: 0;
+			padding: 0;
+		}
 
-	#music-button {
-	    filter: invert(1);
-            width: 3em;
-	    border-radius: 50%;
-	}
-	
-	#music-button:hover {
-	    filter: invert(0);
-	    border: 2px solid #FFFFFF;
-	    cursor: pointer;
-        }
+		h5 {
+			color:white;
+			margin: 0;
+			padding: 0;
+		}
 
-	#up-arrow-song-display {
-	    filter: invert(1);
-	    width: 3em;
-            border-radius: 50%;
-	}
+		#music-button {
+			filter: invert(1);
+			width: 3em;
+			border-radius: 50%;
+		}
 
-	#up-arrow-song-display:hover{
-	    background-color: #FFFFFF;
-	    cursor: pointer;
-            filter: invert(0);
-	    border: 2px solid #FFFFFF;
-	}
+		#music-button:hover {
+			filter: invert(0);
+			border: 2px solid #FFFFFF;
+			cursor: pointer;
+		}
 
-	#nav-bar {
-            align-items: center;
-	    position: fixed;
-            display: flex;
-            margin-left: 2em;
-	    top: 0;
-	    width: 100vw;
-            padding:0;
-            margin:0;
-	}
+		#up-arrow-song-display {
+			filter: invert(1);
+			width: 3em;
+			border-radius: 50%;
+		}
 
-	#nav-bar-back-button {
-	    width: 3em;
-            filter: invert(1);
-	    border-radius: 50%;
-	}
- 
-        #nav-bar-back-button:hover{
-	    filter: invert(0);
-	    background-color: #FFFFFF;
-            cursor: pointer;
-	}
+		#up-arrow-song-display:hover{
+			background-color: #FFFFFF;
+			cursor: pointer;
+			filter: invert(0);
+			border: 2px solid #FFFFFF;
+		}
 
-        
-	#artist-populate:hover{
-	    box-shadow:
-                    0 0 2px 2px #B1FFF7, 
-                    0 0 5px 6px #01E4FF,
-                    0 0 6px 7px #50A5FF; 
-	}
+		#nav-bar {
+			align-items: center;
+			position: fixed;
+			display: flex;
+			margin-left: 2em;
+			top: 0;
+			width: 100vw;
+			padding:0;
+		}
 
-        #song-display {
-    	    width: 100vw; /* Adjust the width of the sidebar as needed */
-            justify-content: center;
-    	    position: fixed;
-    	    top: 0;
-    	    right: 0;
-    	    height: 100%;
-    	    background-color: #000000; /* Your desired background color */
-            display: flex;
-            text: white;
-	    z-index: 99;
-    	    /* Add any other styles for the sidebar */
-	}
+		#nav-bar-back-button {
+			width: 3em;
+			filter: invert(1);
+			border-radius: 50%;
+		}
 
-        #player-bar {
-	    align-items: center;
-	    justify-content: center;
-            position: fixed;
-    	    bottom: 0;
-    	    background-color: #000000;
-    	    width: 100%;
-    	    height: 8vh;
-    	    display: flex; /* Add this line to enable flexbox */
-    	    z-index: 100; /* Corrected property name */
-        }
+		#nav-bar-back-button:hover{
+			filter: invert(0);
+			background-color: #FFFFFF;
+			cursor: pointer;
+		}
 
-        #player-bar-text-holder {
-            margin-left: 1em;
-	    align-items: center;
-	}
+		#artist-populate:hover{
+			box-shadow:
+			0 0 2px 2px #B1FFF7,
+			0 0 5px 6px #01E4FF,
+			0 0 6px 7px #50A5FF;
+		}
 
-        #player-bar-title {
-	    font-size: 2.2vh;
-	    margin-bottom: 4px;
-	}
+		#song-display {
+			width: 100vw; /* Adjust the width of the sidebar as needed */
+			justify-content: center;
+			position: fixed;
+			top: 0;
+			right: 0;
+			height: 100%;
+			background-color: #000000; /* Your desired background color */
+			display: flex;
+			color: white;
+			z-index: 99;
+		}
+
+		#player-bar {
+			align-items: center;
+			justify-content: space-around; /* Use space-around for even spacing */
+			position: fixed;
+			bottom: 0;
+			background-color: #000000;
+			width: 100%;
+			height: 8vh;
+			display: flex;
+			z-index: 100;
+		}
+
+		.player-bar-column {
+			flex: 1; /* Let each column take up equal space */
+			display: flex;
+			align-items: center;
+			justify-content: center; /* Center content horizontally and vertically */
+		}
+
+		#player-bar-text-holder {
+			margin-left: 1em;
+			align-items: center;
+		}
+
+		#player-bar-title {
+			font-size: 2.2vh;
+			margin-bottom: 4px;
+		}
+
+		#player-bar-artist {
+			font-size: 1.2vh;
+		}
+
+		#player-bar-controls {
+			align-content: center;
+		}
+
+		#player-bar-song-info{
+		}
+
+		#album-content {
+			width: 100vw;
+			background-color:#E8F8F5;
+			height: 100%
+		}
+
+		.song-tag {
+			width: 70%;
+			max-width: 70vw;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			color: white;
+			margin-top: 1em;
+			border-bottom: 2px solid #FFFFFF;
+		}
+
+		.song-tag-left {
+			width: 80vw;
+			display: flex;
+			cursor: pointer;
+			margin-left: 2em;
+			justify-content: flex-start;
+		}
+
+		.song-tag-left:hover {
+			background-color: #CEE5FF;
+		}
+
+		.song-tag-right {
+			width: 10vw;
+			display: flex;
+			justify-content: center;
+		}
+
+		.song-tag-right:hover {
+			background-color: #CEE5FF;
+			cursor: pointer;
+		}
+
+		#content {
+			width: 100vw;
+			height: 100vh;
+			overflow: auto;
+			margin-top: 4em;
+			display: flex;
+		}
+
+		#song-display-cover {
+			margin-top: 5em;
+			backdrop-filter: blur(30px) saturate(3);
+		}
+
+		#player-bar-cover {
+			width: 6vh;
+			border-radius: 2px;
+		}
+
+		#player-bar-title {
+		}
+
+		#container-info {
+			margin-top: 15vh;
+			align-items: center;
+			position: fixed;
+			display: flex;
+			flex: 1;
+			width: 33vw;
+			height: 100vh; /* Adjust height as needed */
+			flex-direction: column;
+		}
+
+		#container-info-cover {
+			height: 30vh;
+			border-radius: 2em;
+		}
+
+		#item-container {
+			display: flex;
+			overflow-y:auto;
+			margin-left: 2vw;
+			margin-bottom: 5em;
+			width: 100vw;
+			height: 100vh;
+			flex-direction: column; /* Set flex direction to column */
+			align-items: center;
+
+		}
 
 
-	#player-bar-artist {
-	    font-size: 1.2vh;
-	}
+		#container-info-text {
+			display: flex;
+			margin-left: 2em;
+		}
 
-	#player-bar-controls {
-	    align-content: center;
-	}
+		#container-info-text1 {
+			color: white;
+			font-family: Arial, serif;
+			margin: 0; /* Remove default margin */
+		}
 
-	#player-bar-song-info{
-	}
+		#container-info-text2 {
+			color: white;
+			font-family: Arial, serif;
+			margin: 0; /* Remove default margin */
+		}
 
-        #album-content {
-            width: 100vw;
-            background-color:#E8F8F5
-            height: 100%
-        }
+		.track-num-text {
+			font-family: Tahoma, serif;
+			color: gray;
+		}
 
-        .song-tag {
-	    width: 70%;
-	    max-width: 70vw;
-    	    display: flex;
-            justify-content: space-between
-    	    align-items: center;
-    	    color: white;
-    	    margin-top: 1em;
-    	    border-bottom: 2px solid #FFFFFF;
-	}
-
-        .song-tag-left {
-            width: 80vw
-	    display: flex;
-            cursor: pointer;
-	    margin-left: 2em;
-	    justify-content: flex-start;
-	}
-
-	.song-tag-left:hover {
-            background-color: #CEE5FF;
-        }
-
-        .song-tag-right {
-            width: 10vw;
-            display: flex;
-            justify-content: center;
-        }
-       
-        .song-tag-right:hover {
-            background-color: #CEE5FF;
-            cursor: pointer;
-        }
-
-  	#content {
-            width: 100vw;
-            height: 100vh;
-	    overflow: auto;
-            margin-top: 4em;
-            display: flex;
-	}
-
-	#song-display-cover {
-		margin-top: 5em;
-		backdrop-filter: blur(30px) saturate(3);
-	}
-
-	#player-bar-cover {
-		width: 6vh;
-		border-radius: 2px;	
-	}
-
-	#player-bar-title {
-	}
-
-	#container-info {
-	    margin-top: 15vh;
-	    align-items: center;
-	    position: fixed;
-	    display: flex;
-	    flex: 1;
-	    width: 33vw; 
-            height: 100vh; /* Adjust height as needed */
-	    flex-direction: column;
-	}
-
-	#container-info-cover {
-	    height: 30vh;
-	    border-radius: 2em;
-	}
-
-	#item-container {
-	    display: flex;
-	    overflow-y:auto;
-            margin-left: 2vw;
-            margin-bottom: 5em;
-	    width: 100vw;
-            background-color:
-            height: 100vh;
-	    flex-direction: column; /* Set flex direction to column */
-            align-items: center;
-          
-	}
-
-
-	#container-info-text { 
-    	    display: flex;
-	    margin-left: 2em;
-	}
-
-	#container-info-text1 {
-	    color: white;
-            font-family: Arial;
-	    margin: 0; /* Remove default margin */
-	}
-
-	#container-info-text2 {
-	    color: white;
-            font-family: Arial;
-            margin: 0; /* Remove default margin */
-        }
-
-	.player-bar-column {
-	    positon: fixed;
-            display: flex;
-            width: 33.333333%;
-            align-items: center;
-	}
-
-        .track-num-text {
-	    font-family: Tahoma;
-            color: gray;
-	}
-	    
-	
   </style>
 
 
@@ -278,13 +272,16 @@
 	        <a onclick="get_artists()">
 			<h3 id="artist-populate"> ARTISTS </h3>
 		</a>
+
+                <a onclick="get_playlists()">
+                        <h3 id="playlist-populate"> PLAYLISTS </h3>
+                </a>
 	</div>
 
 	<div id="player-bar">
 
-		<div class="player-bar-column" style="margin-left: 3em; display: flex;">
-               		<img src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/cover.jpg" id="player-bar-cover"> </img>
-
+		<div class="player-bar-column" style="margin-left: 3em; display: flex; justify-content: flex-start">
+			<img src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/cover.jpg" id="player-bar-cover" alt="album-cover"/>
 			<div id="player-bar-text-holder">
 				<h4 id="player-bar-title">For Free?</h4>
 				<h5 id="player-bar-artist">KENDRICK LAMAR</h5>		
@@ -332,54 +329,61 @@
                 document.getElementById("content").style.width = "100vw";
             }
  
+            function get_playlists() {
+                pywebview.api.populate_available_playlists()
+            }
+
+            function populate_playlist(playlist_content_json) {
+                pywebview.api.populate_playlist(playlist_content_json)
+            }
+
             function get_artists() {
-                pywebview.api.get_artists().then(showResponse)
+                pywebview.api.get_artists()
             }
 
             function populate_artist_work(url) {
-                 
-                pywebview.api.populate_artist_work(url).then(showResponse)
-	    }
+                pywebview.api.populate_artist_work(url)
+			}
 
             function populate_songs_from_album(url) {
-                pywebview.api.populate_songs_from_album(url).then(showReponse)
+                pywebview.api.populate_songs_from_album(url)
             }
 
             function navigate_back() {
-                pywebview.api.navigate_back().then(showResponse)
-	    }
+                pywebview.api.navigate_back()
+	    	}
 
             function play_song(url) {
-                var audioElement = document.getElementById("audio");
+                let audioElement = document.getElementById("audio");
                 document.getElementById("content").style.width =  "100vw"
                 audioElement.src = url;
                 audioElement.play();
                 document.getElementById("music-button").src = "http://localhost:8080/images/PauseButton.png";                
 
-		audioElement.addEventListener("ended", function(){
-     		    audioElement.currentTime = 0;
-     		    console.log("ended");
-		    play_next_in_queue();
-		});
+                audioElement.addEventListener("ended", function(){
+		    		audioElement.currentTime = 0;
+					console.log("ended");
+		    		play_next_song();
+				});
 
-		pywebview.api.populate_player_view(url).then(showResponse)
+				pywebview.api.populate_player_view(url)
             }
 
             function toggle_music() {
-                pywebview.api.toggle_music().then(showResponse)
-	    }
+                pywebview.api.toggle_music()
+	    	}
 
             function show_full_song() {
                 document.getElementById('song-display').style.visibility = "visible";
             }
 
             function add_to_queue(url) {
-	        pywebview.api.add_to_queue(url).then(showResponse)
-	    }
+	        	pywebview.api.add_to_queue(url)
+	    	}
 
-            function play_next_in_queue() {
-	        pywebview.api.play_next_in_queue().then(showResponse)
-	    }
+            function play_next_song() {
+	        	pywebview.api.play_next_song()
+	    	}
                  
 	</script>
 </body>
