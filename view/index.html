@@ -353,21 +353,17 @@
                 pywebview.api.navigate_back()
 	    	}
 
-            function play_song(url) {
-                let audioElement = document.getElementById("audio");
-                document.getElementById("content").style.width =  "100vw"
-                audioElement.src = url;
-                audioElement.play();
-                document.getElementById("music-button").src = "http://localhost:8080/images/PauseButton.png";                
+			function play_song_from_click(url){
+				let audioElement = document.getElementById("audio");
+				document.getElementById("content").style.width =  "100vw"
 
-                audioElement.addEventListener("ended", function(){
-		    		audioElement.currentTime = 0;
+				audioElement.addEventListener("ended", function(){
+					audioElement.currentTime = 0;
 					console.log("ended");
-		    		play_next_song();
+					play_next_song();
 				});
-
-				pywebview.api.populate_player_view(url)
-            }
+				pywebview.api.play_song_from_click(url)
+			}
 
             function toggle_music() {
                 pywebview.api.toggle_music()

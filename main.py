@@ -24,11 +24,19 @@ class Api:
         # it handles autoplay from the album
         self.collection_queue = queue.Queue()
 
+        # This array is used to populate song present in a collection, i.e. a playlist or album. When a collection
+        # is loaded, this array is populated will all these values, even if not played. Once the song is played, the
+        # collection queue is created by omitting details from the potential playlist that have already been played
+        self.potential_tracks = []
+
 
         self.is_playing = False
 
     def clear_content_view(self):
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
+
+    def clear_potential_tracks(self):
+        self.potential_tracks = []
 
     def populate_song_tag(self, navigation_url, song_name):
         javascript_code = """
@@ -44,7 +52,7 @@ class Api:
                 tag_right_component.setAttribute('class','song-tag-right');
                 
                 tag_left_component.addEventListener('click', function(){
-                    play_song('%s');
+                    play_song_from_click('%s');
                 });
 
                 tag_right_component.addEventListener('click', function(){
@@ -70,6 +78,7 @@ class Api:
         window.evaluate_js(javascript_code)
 
     def populate_album_info(self, cover_url, album_name, artist_name):
+        self.clear_potential_tracks()
 
         javascript_code = """
             document.getElementById('container-info').style.visibility = 'visible';
@@ -87,6 +96,7 @@ class Api:
 
         self.navigation_queue.put(("get_artists", ""))
 
+        self.clear_potential_tracks()
         self.clear_content_view()
 
         urls = []
@@ -128,6 +138,7 @@ class Api:
         self.current_working_url = f"http://localhost:8080/Music/Music/{url}"
 
         self.navigation_queue.put(("populate_artist_work", url))
+        self.clear_potential_tracks()
 
 
         albums = []
@@ -150,9 +161,6 @@ class Api:
 
                 navigation_url = f"{url}{embed_url}"
 
-                print(f"SONG URL IS {navigation_url}")
-                print(f"ALBUM NAME IS {album_name}")
-
                 javascript_code = """
                     new_tag = document.createElement('div');
                     new_tag.setAttribute('class', 'song-tag');
@@ -173,7 +181,8 @@ class Api:
 
     def populate_songs_from_album(self, url):
 
-        print(f"THE URL IS {url}")
+        # clear existing potential queue to represent new content loaded
+        self.clear_potential_tracks()
 
         # fetch song links from locally hosted server
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
@@ -204,10 +213,6 @@ class Api:
         # clear div content for new view
         self.clear_content_view()
 
-        print(f"THE cover url IS {cover_url}")
-        print(f"THE album name IS {album_name}")
-        print(f"THE artist name IS {artist_name}")
-
         # this method just populates the dom view to display album cover and artist names
         self.populate_album_info(cover_url, album_name, artist_name)
 
@@ -215,6 +220,9 @@ class Api:
         song_num = 0
         # go through all song links present in html
         for embed_url in songs:
+
+            # add contents to potential queue
+            self.potential_tracks.append(f"http://localhost:8080/Music/Music/{url}{embed_url}")
 
             # increment counter to keep track of which track number the song is
             song_num += 1
@@ -256,7 +264,7 @@ class Api:
 
         total_url = new_url+"/cover.jpg"
        
-        window.evaluate_js(f"document.getElementById('container-info').style.visibility = 'hidden'")
+        #window.evaluate_js(f"document.getElementById('container-info').style.visibility = 'hidden'")
  
         window.evaluate_js(f"document.getElementById('song-display-cover').src = '{total_url}'")
 
@@ -273,7 +281,8 @@ class Api:
 
         playlist_info = reqs.json()
 
-        window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
+        self.clear_potential_tracks()
+        self.clear_content_view()
 
         # get all playlists
         for playlist_id in playlist_info:
@@ -300,6 +309,9 @@ class Api:
     def populate_playlist(self, playlist_content_json):
         self.navigation_queue.put(("populate_songs_from_album", playlist_content_json))
 
+        # clear potential queue to represent new content being loaded
+        self.clear_potential_tracks()
+
         self.clear_content_view()
 
         cover_url = f"{playlist_content_json['cover']}"
@@ -308,6 +320,8 @@ class Api:
 
         for song in song_content:
             parsed_song_url = song_content[song]
+
+            self.potential_tracks.append(parsed_song_url)
 
             song_url = parsed_song_url.split("/")[-1][:-4]
             song_name = unquote(song_url)
@@ -361,7 +375,27 @@ class Api:
             window.evaluate_js("document.getElementById('audio').play();")
             self.is_playing = True
 
+    def play_song_from_click(self, url):
+        self.collection_queue.queue.clear()
+        if self.potential_tracks:
+            for i in range(len(self.potential_tracks)):
+                url_content = self.potential_tracks[i]
+                if url_content == url:
+                    for remaining_track in self.potential_tracks[i+1:]:
+                        next_eligible_song = remaining_track
+
+                        print(f"PUTTING {next_eligible_song} in the collection queue")
+                        self.collection_queue.put(next_eligible_song)
+                    break
+
+        self.play_song(url)
+
     def play_song(self, url):
+
+        self.populate_player_view(url)
+
+        window.evaluate_js("document.getElementById('music-button').src = "
+                           "'http://localhost:8080/images/PauseButton.png';")
         window.evaluate_js(f"document.getElementById('audio').src = '{url}'")
         window.evaluate_js(f"document.getElementById('audio').play()")
 
@@ -371,8 +405,14 @@ class Api:
     def play_next_song(self):
 
         if self.song_queue.empty():
-            window.evaluate_js(f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+            if self.collection_queue.empty():
+                window.evaluate_js(f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+            else:
+                collection_queue_next = self.collection_queue.get()
+                self.play_song(collection_queue_next)
         else:
+            self.collection_queue.queue.clear()
+
             next_song_url = self.song_queue.get()
             self.play_song(next_song_url)
             self.populate_player_view(next_song_url)
