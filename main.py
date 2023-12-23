@@ -1,3 +1,4 @@
+import json
 import threading
 import webview
 import http.server
@@ -6,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import unquote
 import queue
+
 
 class Api:
     def __init__(self):
@@ -29,8 +31,13 @@ class Api:
         # collection queue is created by omitting details from the potential playlist that have already been played
         self.potential_tracks = []
 
-
         self.is_playing = False
+
+    # ____________________________________
+    # | This batch of methods are for    |
+    # | clearing and populating specific |
+    # | elements related to the DOM      |
+    # |__________________________________|
 
     def clear_content_view(self):
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
@@ -73,10 +80,15 @@ class Api:
                 tag_left_component.appendChild(song_name_element);
                 tag_right_component.appendChild(add_to_queue_text);
 
-            """ % (navigation_url, navigation_url,  song_name)
+            """ % (navigation_url, navigation_url, song_name)
 
         window.evaluate_js(javascript_code)
 
+    # ____________________________________
+    # | This batch of methods are for    |
+    # | fetching and populating different|
+    # | artists and albums               |
+    # |__________________________________|
 
     def get_artists(self):
         reqs = requests.get('http://localhost:8080/Music/Music')
@@ -117,7 +129,6 @@ class Api:
 
                 window.evaluate_js(javascript_code)
 
-
     def populate_album_info(self, cover_url, album_name, artist_name):
         self.clear_potential_tracks()
 
@@ -131,7 +142,6 @@ class Api:
 
         window.evaluate_js(javascript_code)
 
-
     def populate_artist_work(self, url):
 
         reqs = requests.get(f'http://localhost:8080/Music/Music/{url}')
@@ -141,7 +151,6 @@ class Api:
 
         self.navigation_queue.put(("populate_artist_work", url))
         self.clear_potential_tracks()
-
 
         albums = []
         for link in soup.find_all('a'):
@@ -160,7 +169,6 @@ class Api:
             album_name = unquote(embed_url)
 
             if album_name[0] != ".":
-
                 navigation_url = f"{url}{embed_url}"
 
                 javascript_code = """
@@ -218,7 +226,6 @@ class Api:
         # this method just populates the dom view to display album cover and artist names
         self.populate_album_info(cover_url, album_name, artist_name)
 
-
         song_num = 0
         # go through all song links present in html
         for embed_url in songs:
@@ -236,38 +243,35 @@ class Api:
             if song_name[0] != ".":
 
                 if song_name[-4:] == ".mp3":
-
                     # keep track of full url to append to audio element in the dom
 
                     navigation_url = f"http://localhost:8080/Music/Music/{url}{embed_url}"
-           
+
                     song_name = song_name[:-4]
                     song_name = " ".join(song_name.split(" ")[1:])
 
                     self.populate_song_tag(navigation_url, song_name)
-
 
     def populate_player_view(self, url):
 
         self.is_playing = True
 
         new_url = "/".join(url.split("/")[:-1])
-         
+
         mp3_url = url.split("/")[-1]
         song_name = (unquote(mp3_url))[:-4]
         song_name = " ".join(song_name.split(" ")[1:])
-        
 
         album_url = url.split("/")[-2]
         album_name = unquote(album_url)
-        
+
         artist_url = url.split("/")[-3]
         artist_name = unquote(artist_url)
 
-        total_url = new_url+"/cover.jpg"
-       
-        #window.evaluate_js(f"document.getElementById('container-info').style.visibility = 'hidden'")
- 
+        total_url = new_url + "/cover.jpg"
+
+        # window.evaluate_js(f"document.getElementById('container-info').style.visibility = 'hidden'")
+
         window.evaluate_js(f"document.getElementById('song-display-cover').src = '{total_url}'")
 
         window.evaluate_js(f"document.getElementById('song-display-song-name').innerHTML = '{song_name}'")
@@ -285,6 +289,23 @@ class Api:
 
         self.clear_potential_tracks()
         self.clear_content_view()
+
+        javascript_code = """
+            newTag = document.createElement('div');
+            newTag.setAttribute('class', 'song-tag');
+
+            newTag.addEventListener('click', function(){
+                create_new_playlist()                     
+            });
+            
+            tagText = document.createElement('h4');
+            tagText.innerText = 'NEW PLAYLIST';
+
+            document.getElementById('item-container').appendChild(newTag);
+
+            newTag.appendChild(tagText);
+        """
+        window.evaluate_js(javascript_code)
 
         # get all playlists
         for playlist_id in playlist_info:
@@ -332,11 +353,15 @@ class Api:
             album_name = unquote(album_url)
 
             artist_url = parsed_song_url.split("/")[-3]
-            artist_name = unquote(artist_url) 
+            artist_name = unquote(artist_url)
 
             self.populate_song_tag(parsed_song_url, song_name)
 
-
+    # ____________________________________
+    # | This batch of methods are for    |
+    # | navigating elements and          |
+    # | some functionality of buttons    |
+    # |__________________________________|
     def navigate_back(self):
 
         # pop off the last two elements of the queue to get the last performed action
@@ -347,7 +372,7 @@ class Api:
         last_action_method = last_action[0]
 
         # get the corresponding url to populate the proper information from view
-        url = last_action[1]        
+        url = last_action[1]
 
         if last_action_method == "populate_songs_from_album":
             self.populate_songs_from_album(url)
@@ -363,17 +388,18 @@ class Api:
 
         elif last_action_method == "get_artists":
             self.get_artists()
-        
- 
+
     def toggle_music(self):
 
         if self.is_playing:
-            window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+            window.evaluate_js(
+                "document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
             window.evaluate_js("document.getElementById('audio').pause();")
             self.is_playing = False
 
         else:
-            window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PauseButton.png';")
+            window.evaluate_js(
+                "document.getElementById('music-button').src = 'http://localhost:8080/images/PauseButton.png';")
             window.evaluate_js("document.getElementById('audio').play();")
             self.is_playing = True
 
@@ -384,8 +410,7 @@ class Api:
             for i in range(len(self.potential_tracks)):
                 url_content = self.potential_tracks[i]
                 if url_content == url:
-                    for remaining_track in self.potential_tracks[i+1:]:
-
+                    for remaining_track in self.potential_tracks[i + 1:]:
                         next_eligible_song = remaining_track
                         print(f"PUTTING {next_eligible_song} in the collection queue")
                         self.collection_queue.put(next_eligible_song)
@@ -393,6 +418,11 @@ class Api:
 
         self.play_song(url)
 
+    # ____________________________________
+    # | This batch of methods are for    |
+    # | playing songs and handling       |
+    # | autoplay / queue functionality   |
+    # |__________________________________|
     def play_song(self, url):
         window.evaluate_js("document.getElementById('audio').currentTime = 0;'")
 
@@ -411,7 +441,8 @@ class Api:
         if self.song_queue.empty():
             if self.collection_queue.empty():
                 window.evaluate_js("document.getElementById('audio).currentTime = 0;")
-                window.evaluate_js(f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+                window.evaluate_js(
+                    f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
             else:
                 collection_queue_next = self.collection_queue.get()
                 self.play_song(collection_queue_next)
@@ -426,6 +457,70 @@ class Api:
     def skip_song(self):
         self.play_next_song()
 
+    # ____________________________________
+    # | This batch of methods are for    |
+    # | handling adjusting and adding to |
+    # | playlists                        |
+    # |__________________________________|
+
+    def create_new_playlist(self):
+        playlist_config_file = open("configuration/playlists.json")
+        playlist_json = json.load(playlist_config_file)
+
+        playlist_id = len(playlist_json) + 1
+
+        playlist_json[str(playlist_id)] = {"name": "New Playlist", "cover": "", "contents": {}, "enabled":True}
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+    def playlist_add_song(self, playlist_id, song_url):
+        playlist_config_file = open("configuration/playlists.json")
+        playlist_json = json.load(playlist_config_file)
+
+        num_songs_in_playlist = len(playlist_json[playlist_id]["contents"])
+
+        playlist_json[playlist_id]["contents"][(num_songs_in_playlist+1)] = song_url
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+    def playlist_set_name(self, playlist_id, playlist_name):
+        playlist_config_file = open("configuration/playlists.json")
+        playlist_json = json.load(playlist_config_file)
+
+        playlist_json[playlist_id]["name"] = playlist_name
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+    def playlist_set_cover(self, playlist_id, cover_url):
+        playlist_config_file = open("configuration/playlists.json")
+        playlist_json = json.load(playlist_config_file)
+
+        playlist_json[playlist_id]["cover"] = cover_url
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+    def playlist_remove_song(self, playlist_id, song_id):
+        playlist_config_file = open("configuration/playlists.json")
+        playlist_json = json.load(playlist_config_file)
+        playlist = playlist_json[playlist_id]["contents"]
+
+        playlist.pop(song_id)
+        for id in playlist:
+            id = int(id)
+            if id < int(song_id):
+                new_id = id - 1
+                playlist[str(id)] = playlist[id]
+                del playlist[id]
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+
+
 def start_server():
     port = 8080
     directory = "."
@@ -433,16 +528,11 @@ def start_server():
     httpd = socketserver.TCPServer(("", port), handler)
     httpd.serve_forever()
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     web_server_thread = threading.Thread(target=start_server)
     web_server_thread.start()
 
     api = Api()
     window = webview.create_window('Comfy Couches', 'view/index.html', js_api=api, width=1500, height=1000)
     webview.start(debug=True)
-
-
-
-
-

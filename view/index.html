@@ -37,6 +37,7 @@
 		}
 
 		h5 {
+			font-family: Tahoma, serif;
 			color:white;
 			margin: 0;
 			padding: 0;
@@ -52,6 +53,18 @@
 			filter: invert(0);
 			border: 2px solid #FFFFFF;
 			cursor: pointer;
+		}
+
+		.select-button {
+			filter: invert(1);
+			cursor:pointer;
+			width: 2.5em;
+			border-radius: 10px;
+		}
+
+		.select-button:hover {
+			filter: invert(0);
+			background-color: white;
 		}
 
 		#up-arrow-song-display {
@@ -89,11 +102,21 @@
 			cursor: pointer;
 		}
 
-		#artist-populate:hover{
-			box-shadow:
-			0 0 2px 2px #B1FFF7,
-			0 0 5px 6px #01E4FF,
-			0 0 6px 7px #50A5FF;
+		.nav-bar-button {
+			padding: 0.5em;
+			background-color: #FFFFFF;
+			color: black;
+			cursor: pointer;
+			border: 2px solid #FFFFFF;
+			border-radius: 10px;
+		}
+
+		.nav-bar-button:hover{
+			background-color: #000000;
+			color: white;
+			cursor: pointer;
+			border: 2px solid #000000;
+			border-radius: 10px;
 		}
 
 		#song-display {
@@ -142,6 +165,11 @@
 			font-size: 1.2vh;
 		}
 
+		#player-bar-artist:hover {
+			text-decoration: underline;
+			cursor: pointer;
+		}
+
 		#player-bar-controls {
 			align-content: center;
 		}
@@ -153,6 +181,10 @@
 			width: 100vw;
 			background-color:#E8F8F5;
 			height: 100%
+		}
+
+		div.artist-tag {
+			background-color: #FFFFFF;
 		}
 
 		.song-tag {
@@ -229,13 +261,15 @@
 		#item-container {
 			display: flex;
 			overflow-y:auto;
+			overflow-x: hidden;
+			padding: 1em;
 			margin-left: 2vw;
-			margin-bottom: 5em;
+			margin-bottom: 8vh;
 			width: 100vw;
-			height: 100vh;
+			height: 80vh;
 			flex-direction: column; /* Set flex direction to column */
 			align-items: center;
-
+			position: fixed;
 		}
 
 
@@ -270,12 +304,17 @@
 	<div id="nav-bar">
 		<img id="nav-bar-back-button" onclick="navigate_back()" src="http://localhost:8080/images/BackButton.png"></img>
 	        <a onclick="get_artists()">
-			<h3 id="artist-populate"> ARTISTS </h3>
+			<h3 id="artist-populate" class="nav-bar-button"> ARTISTS </h3>
 		</a>
 
-                <a onclick="get_playlists()">
-                        <h3 id="playlist-populate"> PLAYLISTS </h3>
-                </a>
+		<a onclick="get_playlists()">
+			<h3 id="playlist-populate" class="nav-bar-button"> PLAYLISTS </h3>
+		</a>
+
+		<a onclick="get_albums()">
+			<h3 id="get-albums" class="nav-bar-button"> ALBUMS </h3>
+		</a>
+
 	</div>
 
 	<div id="player-bar">
@@ -284,13 +323,15 @@
 			<img src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/cover.jpg" id="player-bar-cover" alt="album-cover"/>
 			<div id="player-bar-text-holder">
 				<h4 id="player-bar-title">For Free?</h4>
-				<h5 id="player-bar-artist">KENDRICK LAMAR</h5>		
+				<h5 id="player-bar-artist" onclick="click_artist_playerview()">KENDRICK LAMAR</h5>
 			</div>
 		</div>
 		
 		<div class="player-bar-column" style="justify-content: center">
+			<img class="select-button" id="last-song-button" src="http://localhost:8080/images/ReverseButton.png" onclick="last_song()"></img>
 			<img id="music-button" src="http://localhost:8080/images/PlayButton.png" onclick="toggle_music()"></img>
-        		<audio id="audio" src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/02%20For%20Free%3F%20-%20Interlude.mp3" type="audio/mpeg"> </audio>
+			<audio id="audio" src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/02%20For%20Free%3F%20-%20Interlude.mp3" type="audio/mpeg"> </audio>
+			<img class="select-button" src="http://localhost:8080/images/SkipButton.png" onclick="skip_song()"></img>
 		</div>
 	
 		<div class="player-bar-column" style="justify-content: right; margin-right: 3em;">
@@ -301,17 +342,17 @@
         <div id="song-display" style="visibility: hidden">
 		<div>
 			<div id="image-display-parent"> 
-                		<img width="400vw" id="song-display-cover" src=""></img>	
+				<img width="400vw" id="song-display-cover" src=""></img>
 			</div>
-                	<h2 id="song-display-song-name" style="color: white;"> SILLY SONG </h2>
-                        <h3 id="song-display-artist-name" style="color:white; "> SILLY ARTIST </h3>
+				<h2 id="song-display-song-name" style="color: white;"> SILLY SONG </h2>
+				<h3 id="song-display-artist-name" style="color:white; "> SILLY ARTIST </h3>
 		</div>
 
 		<button onclick="hide_music_display()">X</button>
         </div>
 
         <div id="content">
-               	<div id="container-info" style="visibility: hidden">
+			<div id="container-info" style="visibility: hidden">
 			<img id="container-info-cover" src="http://localhost:8080/Music/Music/100%20gecs/10%2C000%20gecs/cover.jpg"></img>
 			<h1 id="container-info-text1"></h1>
 			<h2 id="container-info-text2"></h2>
@@ -328,17 +369,20 @@
                 document.getElementById("song-display").style.visibility = "hidden";
                 document.getElementById("content").style.width = "100vw";
             }
- 
-            function get_playlists() {
-                pywebview.api.populate_available_playlists()
-            }
 
+			function get_artists() {
+				pywebview.api.get_artists()
+			}
+
+			function get_playlists() {
+				pywebview.api.populate_available_playlists()
+			}
+
+			function get_albums() {
+				pywebview.api.get_albums()
+			}
             function populate_playlist(playlist_content_json) {
                 pywebview.api.populate_playlist(playlist_content_json)
-            }
-
-            function get_artists() {
-                pywebview.api.get_artists()
             }
 
             function populate_artist_work(url) {
@@ -353,13 +397,22 @@
                 pywebview.api.navigate_back()
 	    	}
 
+			function click_artist_playerview(){
+				let audioElement = document.getElementById('audio');
+				let audioSrc = audioElement.src;
+
+				let audioSplit = audioSrc.split("/");
+
+				audioSplit = audioSplit[audioSplit.length - 3];
+
+				populate_artist_work(audioSplit)
+			}
+
 			function play_song_from_click(url){
 				let audioElement = document.getElementById("audio");
-				document.getElementById("content").style.width =  "100vw"
+				document.getElementById("content").style.width =  "100vw";
 
 				audioElement.addEventListener("ended", function(){
-					audioElement.currentTime = 0;
-					console.log("ended");
 					play_next_song();
 				});
 				pywebview.api.play_song_from_click(url)
@@ -380,6 +433,14 @@
             function play_next_song() {
 	        	pywebview.api.play_next_song()
 	    	}
+
+			function skip_song() {
+				pywebview.api.skip_song()
+			}
+
+			function create_new_playlist() {
+				pywebview.api.create_new_playlist()
+			}
                  
 	</script>
 </body>
