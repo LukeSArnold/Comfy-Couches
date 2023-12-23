@@ -77,18 +77,6 @@ class Api:
 
         window.evaluate_js(javascript_code)
 
-    def populate_album_info(self, cover_url, album_name, artist_name):
-        self.clear_potential_tracks()
-
-        javascript_code = """
-            document.getElementById('container-info').style.visibility = 'visible';
-            document.getElementById('container-info-cover').src = '%s'
-            document.getElementById('container-info-text1').innerHTML = '%s';
-            document.getElementById('container-info-text2').innerHTML = '%s';
-            document.getElementById('item-container').style.marginLeft = '33vw';
-        """ % (cover_url, album_name, artist_name)
-
-        window.evaluate_js(javascript_code)
 
     def get_artists(self):
         reqs = requests.get('http://localhost:8080/Music/Music')
@@ -103,32 +91,46 @@ class Api:
         for link in soup.find_all('a'):
             href = link.get('href')
             if href[0] != ".":
-                urls.append(href) 
+                urls.append(href)
 
         for url in urls:
-        
+
             artist_name = unquote(url)
-           
+
             if artist_name[0] != ".":
                 javascript_code = """
-                    new_tag = document.createElement('div');
-                    new_tag.setAttribute('class', 'song-tag');
+                        new_tag = document.createElement('div');
+                        new_tag.setAttribute('class', 'song-tag');
+    
+                        new_tag.addEventListener('click', function(){
+                             populate_artist_work('%s');
+                        });
+    
+                        artist_name_element = document.createElement('h4');
+                        artist_name_element.innerText = '%s';
+    
+                        new_tag.appendChild(artist_name_element);
+    
+                        document.getElementById('item-container').appendChild(new_tag);
+    
+                    """ % (url, artist_name[:-1])
 
-                    new_tag.addEventListener('click', function(){
-                         populate_artist_work('%s');
-                    });
+                window.evaluate_js(javascript_code)
 
-                    artist_name_element = document.createElement('h4');
-                    artist_name_element.innerText = '%s';
 
-                    new_tag.appendChild(artist_name_element);
+    def populate_album_info(self, cover_url, album_name, artist_name):
+        self.clear_potential_tracks()
 
-                    document.getElementById('item-container').appendChild(new_tag);
+        javascript_code = """
+            document.getElementById('container-info').style.visibility = 'visible';
+            document.getElementById('container-info-cover').src = '%s'
+            document.getElementById('container-info-text1').innerHTML = '%s';
+            document.getElementById('container-info-text2').innerHTML = '%s';
+            document.getElementById('item-container').style.marginLeft = '33vw';
+        """ % (cover_url, album_name, artist_name)
 
-                """ % (url, artist_name[:-1])
+        window.evaluate_js(javascript_code)
 
-                window.evaluate_js(javascript_code) 
-        
 
     def populate_artist_work(self, url):
 
@@ -377,13 +379,14 @@ class Api:
 
     def play_song_from_click(self, url):
         self.collection_queue.queue.clear()
+
         if self.potential_tracks:
             for i in range(len(self.potential_tracks)):
                 url_content = self.potential_tracks[i]
                 if url_content == url:
                     for remaining_track in self.potential_tracks[i+1:]:
-                        next_eligible_song = remaining_track
 
+                        next_eligible_song = remaining_track
                         print(f"PUTTING {next_eligible_song} in the collection queue")
                         self.collection_queue.put(next_eligible_song)
                     break
@@ -391,6 +394,7 @@ class Api:
         self.play_song(url)
 
     def play_song(self, url):
+        window.evaluate_js("document.getElementById('audio').currentTime = 0;'")
 
         self.populate_player_view(url)
 
@@ -406,16 +410,21 @@ class Api:
 
         if self.song_queue.empty():
             if self.collection_queue.empty():
+                window.evaluate_js("document.getElementById('audio).currentTime = 0;")
                 window.evaluate_js(f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
             else:
                 collection_queue_next = self.collection_queue.get()
                 self.play_song(collection_queue_next)
+
         else:
             self.collection_queue.queue.clear()
 
             next_song_url = self.song_queue.get()
             self.play_song(next_song_url)
             self.populate_player_view(next_song_url)
+
+    def skip_song(self):
+        self.play_next_song()
 
 def start_server():
     port = 8080

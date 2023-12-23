@@ -1,18 +1,46 @@
 import os
 import sys
 import eyed3
+import spotipy
+import sys
+from requests import get
+from spotipy.oauth2 import SpotifyClientCredentials
+
 class Port:
     def __init__(self):
         pass 
+
+    def get_artist_image(self, name, corresponding_song, corresponding_album, save_location):
+        print("GETTING ARTIST IMAGE")
+
+        cid = "8cdb42bee2324b83b78f517d35e59f61"
+        secret = "c762f709fba64df091734eca9f126059"
+        client_credentials_manager = SpotifyClientCredentials(client_id=cid, client_secret=secret)
+        spotify = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
+
+        #results = spotify.search(q=f'{name} {corresponding_song} {corresponding_album}', type='artist')
+
+        results = spotify.search(q=f'artist: {name}', type='artist')
+        items = results['artists']['items']
+        artist = items[0]
+
+        img_url = artist['images'][0]['url']
+
+        img_data = get(img_url).content
+        with open(f'{save_location}/artist_image.jpg', 'wb') as handler:
+            handler.write(img_data)
 
     def port(self):
         cur_directory = os.path.dirname(os.path.realpath(__file__))
     
         music_dir = f"{cur_directory}/../Music/Music/"
         auto_add_dir = f"{cur_directory}/../Music/Automatically Add To Music"
-      
-        files = os.listdir(auto_add_dir)
 
+        # files = []
+        # for (dir_path, dir_names, file_names) in os.walk(auto_add_dir):
+        #     files.extend(file_names)
+
+        files = os.listdir(auto_add_dir)
 
         all_files = []
         for file in files:
@@ -23,7 +51,7 @@ class Port:
             audio = eyed3.load(file)
             
             artist = audio.tag.artist
-            
+
             if os.path.exists(f"{music_dir}/{artist}"):
                 pass            
             else:
@@ -57,7 +85,10 @@ class Port:
                     image_file = open(f"{music_dir}/{artist}/{album}/cover.jpg", "wb")
                     image_file.write(image.image_data)
                     image_file.close()
-                
+            if os.path.exists(f"{music_dir}/{artist}/artist_image.jpg"):
+                pass
+            else:
+                self.get_artist_image(artist, song_name, album, f"{music_dir}/{artist}")
         
 if __name__ == "__main__":
     porter = Port()
