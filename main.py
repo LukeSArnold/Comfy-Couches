@@ -26,6 +26,9 @@ class Api:
         # it handles autoplay from the album
         self.collection_queue = queue.Queue()
 
+        # This queue is used to play previous songs and serves as a history collection
+        self.previous_queue = queue.LifoQueue()
+
         # This array is used to populate song present in a collection, i.e. a playlist or album. When a collection
         # is loaded, this array is populated will all these values, even if not played. Once the song is played, the
         # collection queue is created by omitting details from the potential playlist that have already been played
@@ -84,6 +87,16 @@ class Api:
 
         window.evaluate_js(javascript_code)
 
+    def get_current_time(self):
+        time = window.evaluate_js("document.getElementById('audio').currentTime")
+        return time
+
+    def set_pause_button(self):
+        window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PauseButton.png';")
+
+    def set_play_button(self):
+        window.evaluate_js("document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+
     # ____________________________________
     # | This batch of methods are for    |
     # | fetching and populating different|
@@ -107,25 +120,51 @@ class Api:
 
         for url in urls:
 
+            image_url = f"http://localhost:8080/Music/Music/{url}artist_image.jpg"
+
             artist_name = unquote(url)
+
+            javascript_code = """
+                allArtistsContainer = document.createElement('div');
+                allArtistsContainer.setAttribute('class','all-artists-container');
+                
+                allArtistsContainer.id = 'all-artists-container';
+                    
+                document.getElementById('item-container').appendChild(allArtistsContainer);
+            """
+
+            window.evaluate_js(javascript_code)
 
             if artist_name[0] != ".":
                 javascript_code = """
+                        
+                        allArtistsContainer = document.getElementById('all-artists-container');
+                        
                         new_tag = document.createElement('div');
-                        new_tag.setAttribute('class', 'song-tag');
+                        new_tag.setAttribute('class', 'artist-tag');
+    
+                        newContainer = document.createElement('div');
+                        newContainer.setAttribute('class', 'artist-container');
     
                         new_tag.addEventListener('click', function(){
                              populate_artist_work('%s');
                         });
     
-                        artist_name_element = document.createElement('h4');
+                        artistPicture = document.createElement('img');
+                        artistPicture.src = '%s';
+                        artistPicture.setAttribute('class','artist-picture');
+    
+                        artist_name_element = document.createElement('h2');
                         artist_name_element.innerText = '%s';
     
+                        newContainer.appendChild(new_tag);
+    
+                        new_tag.appendChild(artistPicture)
                         new_tag.appendChild(artist_name_element);
     
-                        document.getElementById('item-container').appendChild(new_tag);
-    
-                    """ % (url, artist_name[:-1])
+                        allArtistsContainer.appendChild(newContainer)
+                            
+                    """ % (url, image_url, artist_name[:-1])
 
                 window.evaluate_js(javascript_code)
 
@@ -137,7 +176,7 @@ class Api:
             document.getElementById('container-info-cover').src = '%s'
             document.getElementById('container-info-text1').innerHTML = '%s';
             document.getElementById('container-info-text2').innerHTML = '%s';
-            document.getElementById('item-container').style.marginLeft = '33vw';
+            document.getElementById('item-container').style.marginLeft = '20vw';
         """ % (cover_url, album_name, artist_name)
 
         window.evaluate_js(javascript_code)
@@ -155,7 +194,8 @@ class Api:
         albums = []
         for link in soup.find_all('a'):
             href = link.get('href')
-            albums.append(href)
+            if href[-4:] != ".jpg":
+                albums.append(href)
 
         self.clear_content_view()
 
@@ -171,21 +211,43 @@ class Api:
             if album_name[0] != ".":
                 navigation_url = f"{url}{embed_url}"
 
+                cover_url = f"http://localhost:8080/Music/Music/{url}{embed_url}cover.jpg"
+
                 javascript_code = """
                     new_tag = document.createElement('div');
-                    new_tag.setAttribute('class', 'song-tag');
+                    new_tag.setAttribute('class', 'album-tag');
 
                     new_tag.addEventListener('click', function(){
                          populate_songs_from_album('%s');
                     });
 
-                    album_name_element = document.createElement('h4');
+                    coverSection = document.createElement('div');
+                    textSection = document.createElement('div');
+                    
+                    coverSection.width = '50vw';
+
+                    coverImage = document.createElement('img');
+                    coverImage.setAttribute('class','artist-view-album');
+                    coverImage.src = '%s';
+
+                    album_qualifier = document.createElement('h3');
+                    album_qualifier.innerText = "ALBUM";
+                    album_qualifier.width = '100vw';
+                    album_qualifier.style.borderBottom = "2px solid #FFFFFF";
+
+                    album_name_element = document.createElement('h1');
                     album_name_element.innerText = '%s';
 
-                    document.getElementById('item-container').appendChild(new_tag);
+                    coverSection.appendChild(coverImage);
+                    
+                    textSection.appendChild(album_qualifier);
+                    textSection.appendChild(album_name_element);
+                    
+                    new_tag.appendChild(coverSection);
+                    new_tag.appendChild(textSection);
 
-                    new_tag.appendChild(album_name_element);
-                """ % (navigation_url, album_name[:-1])
+                    document.getElementById('item-container').appendChild(new_tag);
+                """ % (navigation_url, cover_url, album_name[:-1])
 
                 window.evaluate_js(javascript_code)
 
@@ -412,7 +474,6 @@ class Api:
                 if url_content == url:
                     for remaining_track in self.potential_tracks[i + 1:]:
                         next_eligible_song = remaining_track
-                        print(f"PUTTING {next_eligible_song} in the collection queue")
                         self.collection_queue.put(next_eligible_song)
                     break
 
@@ -424,12 +485,13 @@ class Api:
     # | autoplay / queue functionality   |
     # |__________________________________|
     def play_song(self, url):
-        window.evaluate_js("document.getElementById('audio').currentTime = 0;'")
+        window.evaluate_js("document.getElementById('audio').currentTime = 0;")
+
+        self.previous_queue.put(url)
 
         self.populate_player_view(url)
 
-        window.evaluate_js("document.getElementById('music-button').src = "
-                           "'http://localhost:8080/images/PauseButton.png';")
+        self.set_pause_button()
         window.evaluate_js(f"document.getElementById('audio').src = '{url}'")
         window.evaluate_js(f"document.getElementById('audio').play()")
 
@@ -440,9 +502,8 @@ class Api:
 
         if self.song_queue.empty():
             if self.collection_queue.empty():
-                window.evaluate_js("document.getElementById('audio).currentTime = 0;")
-                window.evaluate_js(
-                    f"document.getElementById('music-button').src = 'http://localhost:8080/images/PlayButton.png';")
+                window.evaluate_js("document.getElementById('audio').currentTime = 0;")
+                self.set_play_button()
             else:
                 collection_queue_next = self.collection_queue.get()
                 self.play_song(collection_queue_next)
@@ -454,6 +515,19 @@ class Api:
             self.play_song(next_song_url)
             self.populate_player_view(next_song_url)
 
+    def play_last_song(self):
+        current_time = self.get_current_time()
+
+        if not self.previous_queue.empty():
+            if self.get_current_time() < 1:
+                self.previous_queue.get()
+                song = self.previous_queue.get()
+                self.play_song(song)
+            else:
+                window.evaluate_js("document.getElementById('audio').currentTime = 0;")
+        else:
+            window.evaluate_js("document.getElementById('audio').currentTime = 0;")
+
     def skip_song(self):
         self.play_next_song()
 
@@ -463,9 +537,13 @@ class Api:
     # | playlists                        |
     # |__________________________________|
 
-    def create_new_playlist(self):
+    def get_playlists_conflig(self):
         playlist_config_file = open("configuration/playlists.json")
         playlist_json = json.load(playlist_config_file)
+        return playlist_json
+
+    def create_new_playlist(self):
+        playlist_json = self.get_playlists_conflig()
 
         playlist_id = len(playlist_json) + 1
 
@@ -474,9 +552,24 @@ class Api:
         with open("configuration/playlists.json", "w") as outfile:
             json.dump(playlist_json, outfile)
 
+    def playlist_set_name(self, playlist_id, playlist_name):
+        playlist_json = self.get_playlists_conflig()
+
+        playlist_json[playlist_id]["name"] = playlist_name
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
+    def playlist_set_cover(self, playlist_id, cover_url):
+        playlist_json = self.get_playlists_conflig()
+
+        playlist_json[playlist_id]["cover"] = cover_url
+
+        with open("configuration/playlists.json", "w") as outfile:
+            json.dump(playlist_json, outfile)
+
     def playlist_add_song(self, playlist_id, song_url):
-        playlist_config_file = open("configuration/playlists.json")
-        playlist_json = json.load(playlist_config_file)
+        playlist_json = self.get_playlists_conflig()
 
         num_songs_in_playlist = len(playlist_json[playlist_id]["contents"])
 
@@ -485,27 +578,8 @@ class Api:
         with open("configuration/playlists.json", "w") as outfile:
             json.dump(playlist_json, outfile)
 
-    def playlist_set_name(self, playlist_id, playlist_name):
-        playlist_config_file = open("configuration/playlists.json")
-        playlist_json = json.load(playlist_config_file)
-
-        playlist_json[playlist_id]["name"] = playlist_name
-
-        with open("configuration/playlists.json", "w") as outfile:
-            json.dump(playlist_json, outfile)
-
-    def playlist_set_cover(self, playlist_id, cover_url):
-        playlist_config_file = open("configuration/playlists.json")
-        playlist_json = json.load(playlist_config_file)
-
-        playlist_json[playlist_id]["cover"] = cover_url
-
-        with open("configuration/playlists.json", "w") as outfile:
-            json.dump(playlist_json, outfile)
-
     def playlist_remove_song(self, playlist_id, song_id):
-        playlist_config_file = open("configuration/playlists.json")
-        playlist_json = json.load(playlist_config_file)
+        playlist_json = self.get_playlists_conflig()
         playlist = playlist_json[playlist_id]["contents"]
 
         playlist.pop(song_id)

@@ -15,8 +15,14 @@
 			overflow: auto;
 			margin: 0;
 			height: 100%;
-			background-color: #6A7C8F;
+			background-color: #9db5d2;
 
+		}
+
+		h1 {
+			font-family: Tahoma, serif;
+			color: white;
+			font-size: 2em;
 		}
 
 		h2 {
@@ -41,6 +47,10 @@
 			color:white;
 			margin: 0;
 			padding: 0;
+		}
+
+		p {
+			font-family: Tahoma, serif;
 		}
 
 		#music-button {
@@ -183,13 +193,82 @@
 			height: 100%
 		}
 
+		div.album-tag {
+			width: 40vw;
+			padding: 2em;
+			background-color: #6a7c8f;
+			border-radius: 10px;
+			margin: 2em;
+			display: flex;
+			align-items: center;
+			flex-direction: row;
+		}
+
+		div.album-tag:hover {
+			background-color: #334046;
+			border-radius: 10px;
+		}
+
+		div.artist-album-info {
+
+		}
+
+		img.artist-view-album {
+			width: 16em;
+			padding: 2em;
+			margin-left: 2em;
+			border-radius: 3em;
+		}
+
+		div.all-artists-container {
+			display: flex;
+			flex-wrap: wrap; /* Allow content to wrap to a new row */
+			justify-content: flex-start; /* Align content to the left */
+			align-items: center;
+		}
+
+
 		div.artist-tag {
-			background-color: #FFFFFF;
+			display: flex;
+			width: 18em;
+			height: 22em;
+			justify-content: center;
+			align-items: center;
+			flex-direction: column;
+			background-color: #6a7c8f;
+			border-radius: 10px;
+		}
+
+		div.artist-tag:hover {
+			display: flex;
+			width: 18em;
+			height: 22em;
+			justify-content: center;
+			align-items: center;
+			flex-direction: column;
+			background-color: #334046;
+			border-radius: 10px;
+			cursor: pointer;
+		}
+
+		div.artist-container {
+			padding:1em;
+		}
+
+		img.artist-picture {
+			height: 250px;
+			width: 250px;
+			border-radius: 50%;
+			overflow: hidden;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 1em;
 		}
 
 		.song-tag {
-			width: 70%;
-			max-width: 70vw;
+			width: 50%;
+			max-width: 50vw;
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
@@ -264,10 +343,12 @@
 			overflow-x: hidden;
 			padding: 1em;
 			margin-left: 2vw;
+			margin-right: 2vw;
 			margin-bottom: 8vh;
 			width: 100vw;
 			height: 80vh;
 			flex-direction: column; /* Set flex direction to column */
+			justify-content: flex-start;
 			align-items: center;
 			position: fixed;
 		}
@@ -328,7 +409,7 @@
 		</div>
 		
 		<div class="player-bar-column" style="justify-content: center">
-			<img class="select-button" id="last-song-button" src="http://localhost:8080/images/ReverseButton.png" onclick="last_song()"></img>
+			<img class="select-button" id="last-song-button" src="http://localhost:8080/images/ReverseButton.png" onclick="play_last_song()"></img>
 			<img id="music-button" src="http://localhost:8080/images/PlayButton.png" onclick="toggle_music()"></img>
 			<audio id="audio" src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/02%20For%20Free%3F%20-%20Interlude.mp3" type="audio/mpeg"> </audio>
 			<img class="select-button" src="http://localhost:8080/images/SkipButton.png" onclick="skip_song()"></img>
@@ -433,6 +514,10 @@
             function play_next_song() {
 	        	pywebview.api.play_next_song()
 	    	}
+
+			function play_last_song() {
+				pywebview.api.play_last_song()
+			}
 
 			function skip_song() {
 				pywebview.api.skip_song()
