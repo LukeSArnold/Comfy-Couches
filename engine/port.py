@@ -18,13 +18,13 @@ class Port:
         client_credentials_manager = SpotifyClientCredentials(client_id=cid, client_secret=secret)
         spotify = spotipy.Spotify(client_credentials_manager = client_credentials_manager)
 
-        #results = spotify.search(q=f'{name} {corresponding_song} {corresponding_album}', type='artist')
+        artist_uri = spotify.search(f"{corresponding_song}{corresponding_album}{name}")["tracks"]["items"][0]["album"]["artists"][0]["uri"]
 
-        results = spotify.search(q=f'artist: {name}', type='artist')
-        items = results['artists']['items']
-        artist = items[0]
+        artist_id = str(artist_uri.split(":")[-1])
 
-        img_url = artist['images'][0]['url']
+        artists_result = spotify.artist(artist_id)
+
+        img_url = artists_result["images"][0]["url"]
 
         img_data = get(img_url).content
         with open(f'{save_location}/artist_image.jpg', 'wb') as handler:
