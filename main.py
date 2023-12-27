@@ -45,6 +45,9 @@ class Api:
     def page_setup(self):
         window.evaluate_js("document.getElementById('seek-obj').style.backgroundColor = '#FFFFFF'")
 
+    def replace_apostrophe(self, string):
+        return string.replace("%27", "׳")
+
 
     def clear_content_view(self):
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
@@ -131,14 +134,18 @@ class Api:
 
             artist_name = unquote(url)
 
+            # For everyone who comes after me, I apologize so much for this. The character ׳ is not in fact, a
+            # single quotation mark. It is instead a specific unicode greek letter. God help us
+            artist_name = self.replace_apostrophe(artist_name)
+
             javascript_code = """
-                allArtistsContainer = document.createElement('div');
-                allArtistsContainer.setAttribute('class','all-artists-container');
-                
-                allArtistsContainer.id = 'all-artists-container';
+                    allArtistsContainer = document.createElement('div');
+                    allArtistsContainer.setAttribute('class','all-artists-container');
                     
-                document.getElementById('item-container').appendChild(allArtistsContainer);
-            """
+                    allArtistsContainer.id = 'all-artists-container';
+                        
+                    document.getElementById('item-container').appendChild(allArtistsContainer);
+                """
 
             window.evaluate_js(javascript_code)
 
@@ -214,6 +221,10 @@ class Api:
         for embed_url in albums:
 
             album_name = unquote(embed_url)
+
+            # For everyone who comes after me, I apologize so much for this. The character ׳ is not in fact, a
+            # single quotation mark. It is instead a specific unicode greek letter. God help us
+            album_name = self.replace_apostrophe(album_name)
 
             if album_name[0] != ".":
                 navigation_url = f"{url}{embed_url}"
@@ -317,8 +328,10 @@ class Api:
 
             # unquote removes html specific characters from the song url
             song_name = unquote(embed_url)
+            song_name = self.replace_apostrophe(song_name)
 
-            # filtering out "." files, removing unwanted directories
+
+        # filtering out "." files, removing unwanted directories
             if song_name[0] != ".":
 
                 if song_name[-4:] == ".mp3":
@@ -340,12 +353,16 @@ class Api:
         mp3_url = url.split("/")[-1]
         song_name = (unquote(mp3_url))[:-4]
         song_name = " ".join(song_name.split(" ")[1:])
+        song_name = self.replace_apostrophe(song_name)
 
         album_url = url.split("/")[-2]
         album_name = unquote(album_url)
+        album_name = self.replace_apostrophe(song_name)
 
         artist_url = url.split("/")[-3]
         artist_name = unquote(artist_url)
+        artist_name = self.replace_apostrophe(artist_name)
+
 
         total_url = new_url + "/cover.jpg"
 
