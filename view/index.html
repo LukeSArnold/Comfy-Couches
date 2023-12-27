@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comfy Couches</title>
-  <style>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+	<style>
         html{
 	    	overflow: hidden;
             margin:0;
@@ -55,7 +57,8 @@
 
 		#music-button {
 			filter: invert(1);
-			width: 3em;
+			width: 2em;
+			border: 2px solid #000000;
 			border-radius: 50%;
 		}
 
@@ -147,9 +150,10 @@
 			justify-content: space-around; /* Use space-around for even spacing */
 			position: fixed;
 			bottom: 0;
+			padding: 2em;
 			background-color: #000000;
 			width: 100%;
-			height: 8vh;
+			height: 2em;
 			display: flex;
 			z-index: 100;
 		}
@@ -207,6 +211,7 @@
 		div.album-tag:hover {
 			background-color: #334046;
 			border-radius: 10px;
+			cursor: pointer;
 		}
 
 		div.artist-album-info {
@@ -266,6 +271,16 @@
 			padding: 1em;
 		}
 
+		#tag-container {
+			margin: 2em;
+			display: flex;
+			justify-content: center;
+			flex-direction: column;
+			align-items: center;
+			border-radius: 3em;
+			background-color: #6a7c8f;
+		}
+
 		.song-tag {
 			width: 50%;
 			max-width: 50vw;
@@ -322,7 +337,7 @@
 		}
 
 		#container-info {
-			margin-top: 15vh;
+			margin-top: 5vh;
 			align-items: center;
 			position: fixed;
 			display: flex;
@@ -330,6 +345,17 @@
 			width: 33vw;
 			height: 100vh; /* Adjust height as needed */
 			flex-direction: column;
+		}
+
+		#container-info-padding-div {
+			width: 25em;
+			height: 35em;
+			display: flex;
+			justify-content: center;
+			flex-direction: column;
+			align-items: center;
+			border-radius: 3em;
+			background-color: #6a7c8f;
 		}
 
 		#container-info-cover {
@@ -353,7 +379,6 @@
 			position: fixed;
 		}
 
-
 		#container-info-text {
 			display: flex;
 			margin-left: 2em;
@@ -374,6 +399,11 @@
 		.track-num-text {
 			font-family: Tahoma, serif;
 			color: gray;
+		}
+
+		#progress-bar-holder {
+			display: flex;
+			flex-direction: column;
 		}
 
   </style>
@@ -401,20 +431,36 @@
 	<div id="player-bar">
 
 		<div class="player-bar-column" style="margin-left: 3em; display: flex; justify-content: flex-start">
-			<img src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/cover.jpg" id="player-bar-cover" alt="album-cover"/>
+			<img src="http://localhost:8080/Music/Music/Blood%20Orange/Negro%20Swan/cover.jpg" id="player-bar-cover" alt="album-cover"/>
 			<div id="player-bar-text-holder">
 				<h4 id="player-bar-title">For Free?</h4>
-				<h5 id="player-bar-artist" onclick="click_artist_playerview()">KENDRICK LAMAR</h5>
+				<h5 id="player-bar-artist" onclick="click_artist_playerview()">BLOOD ORANGE</h5>
 			</div>
 		</div>
 		
 		<div class="player-bar-column" style="justify-content: center">
-			<img class="select-button" id="last-song-button" src="http://localhost:8080/images/ReverseButton.png" onclick="play_last_song()"></img>
-			<img id="music-button" src="http://localhost:8080/images/PlayButton.png" onclick="toggle_music()"></img>
-			<audio id="audio" src="http://localhost:8080/Music/Music/Kendrick%20Lamar/To%20Pimp%20A%20Butterfly/02%20For%20Free%3F%20-%20Interlude.mp3" type="audio/mpeg"> </audio>
-			<img class="select-button" src="http://localhost:8080/images/SkipButton.png" onclick="skip_song()"></img>
+			<div id="progress-bar-holder">
+
+				<div class="player-bar-column">
+					<img class="select-button" id="last-song-button" src="http://localhost:8080/images/ReverseButton.png" onclick="play_last_song()"></img>
+					<img id="music-button" src="http://localhost:8080/images/PlayButton.png" onclick="toggle_music()"></img>
+					<div class="audio-wrapper" id="player-container" href="javascript:;">
+						<audio id="audio" src="http://localhost:8080/Music/Music/Blood%20Orange/Negro%20Swan/02%20Saint.mp3" type="audio/mpeg" ontimeupdate="initProgressBar()"> </audio>
+					</div>
+					<img class="select-button" src="http://localhost:8080/images/SkipButton.png" onclick="skip_song()"></img>
+				</div>
+				<div>
+					<div class="player-controls scrubber">
+						<span id="seek-obj-container">
+							<progress id="seek-obj" value="0" max="1"></progress>
+						</span>
+						<small style="float: left; position: relative; left: 15px;" id="start-time"></small>
+						<small style="float: right; position: relative; right: 20px;" id="end-time"></small>
+					</div>
+				</div>
+			</div>
 		</div>
-	
+
 		<div class="player-bar-column" style="justify-content: right; margin-right: 3em;">
 			<img onclick="show_full_song()" id="up-arrow-song-display" src="http://localhost:8080/images/UpArrow.png">
 		</div>
@@ -434,18 +480,30 @@
 
         <div id="content">
 			<div id="container-info" style="visibility: hidden">
-			<img id="container-info-cover" src="http://localhost:8080/Music/Music/100%20gecs/10%2C000%20gecs/cover.jpg"></img>
-			<h1 id="container-info-text1"></h1>
-			<h2 id="container-info-text2"></h2>
+				<div id="container-info-padding-div">
+					<img id="container-info-cover" src="http://localhost:8080/Music/Music/100%20gecs/10%2C000%20gecs/cover.jpg"></img>
+					<h1 id="container-info-text1"></h1>
+					<h2 id="container-info-text2"></h2>
+				</div>
 		</div>	 
 		<div id="item-container">
-			
 		</div>
 			
 	</div>
 
         <script>
 
+			window.onload = function() {
+				// Code to run when the page is loaded
+				progressBar = document.getElementById('seek-obj');
+				progressBar.style.backgroundColor = '#FFFFFF';
+				progressBar.style.borderRadius = '10px'
+				progressBar.style.overflow = 'hidden';
+				progressBar.style.border = "2px solid white";
+				progressBar.style.marginTop = "1em";
+				progressBar.style.width = "30vw";
+
+			};
             function hide_music_display() {
                 document.getElementById("song-display").style.visibility = "hidden";
                 document.getElementById("content").style.width = "100vw";
@@ -526,7 +584,21 @@
 			function create_new_playlist() {
 				pywebview.api.create_new_playlist()
 			}
-                 
+
+			function initProgressBar() {
+				var player = document.getElementById('audio');
+
+				var progressbar = document.getElementById('seek-obj');
+				progressbar.value = (player.currentTime / player.duration);
+				progressbar.addEventListener("click", seek);
+
+				function seek(event) {
+					var percent = event.offsetX / this.offsetWidth;
+					player.currentTime = percent * player.duration;
+					progressbar.value = percent / 100;
+				}
+			}
+
 	</script>
 </body>
 </html>

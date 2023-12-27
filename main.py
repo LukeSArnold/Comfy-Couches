@@ -42,14 +42,21 @@ class Api:
     # | elements related to the DOM      |
     # |__________________________________|
 
+    def page_setup(self):
+        window.evaluate_js("document.getElementById('seek-obj').style.backgroundColor = '#FFFFFF'")
+
+
     def clear_content_view(self):
         window.evaluate_js("document.getElementById('item-container').innerHTML = ''")
+
 
     def clear_potential_tracks(self):
         self.potential_tracks = []
 
     def populate_song_tag(self, navigation_url, song_name):
+
         javascript_code = """
+
                 new_tag = document.createElement('div');
                 new_tag.setAttribute('class', 'song-tag');
                 new_tag.style.justifyContent = 'space-between';
@@ -60,7 +67,7 @@ class Api:
 
                 tag_right_component = document.createElement('div');
                 tag_right_component.setAttribute('class','song-tag-right');
-                
+
                 tag_left_component.addEventListener('click', function(){
                     play_song_from_click('%s');
                 });
@@ -75,13 +82,13 @@ class Api:
                 add_to_queue_text = document.createElement('h4');
                 add_to_queue_text.innerText = '+';
 
-                document.getElementById('item-container').appendChild(new_tag);
-
                 new_tag.appendChild(tag_left_component);
                 new_tag.appendChild(tag_right_component);
 
                 tag_left_component.appendChild(song_name_element);
                 tag_right_component.appendChild(add_to_queue_text);
+
+                document.getElementById('tag-container').appendChild(new_tag);
 
             """ % (navigation_url, navigation_url, song_name)
 
@@ -288,6 +295,16 @@ class Api:
         # this method just populates the dom view to display album cover and artist names
         self.populate_album_info(cover_url, album_name, artist_name)
 
+        # create div holder for song content
+        javascript_code = """
+            tag_container = document.createElement('div');
+            tag_container.setAttribute('class', 'tag-container');
+            tag_container.setAttribute('id', 'tag-container');
+
+            document.getElementById('item-container').appendChild(tag_container);
+        """
+        window.evaluate_js(javascript_code)
+
         song_num = 0
         # go through all song links present in html
         for embed_url in songs:
@@ -342,6 +359,7 @@ class Api:
         window.evaluate_js(f"document.getElementById('player-bar-cover').src = '{total_url}'")
         window.evaluate_js(f"document.getElementById('player-bar-title').innerHTML = '{song_name}'")
         window.evaluate_js(f"document.getElementById('player-bar-artist').innerHTML = '{artist_name}'")
+
 
     def populate_available_playlists(self):
         reqs = requests.get(f'http://localhost:8080/configuration/playlists.json')
